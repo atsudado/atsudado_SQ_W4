@@ -30,8 +30,10 @@ The console will show any errors in your sketch.
 
 ## Assets
 
-No external assets used. All visuals are generated with p5.js.
+| File | Source |
+|------|--------|
+| `assets/images/background.jpg` [1] | From Steam|
 
 ## References
 
-N/A
+[1] Bennett Foddy. (Dec 6, 2017). "Getting Over It with Bennett Foddy". Steam. https://store.steampowered.com/app/240720/Getting_Over_It_with_Bennett_Foddy/
