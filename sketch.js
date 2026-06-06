@@ -1,5 +1,5 @@
 // ============================================================
-// Week 4 Example 2: Full Rock Paper Scissors (Best of 3)
+// Week 4 Example: Choose Your Own Adventure
 // ============================================================
 
 // ------------------------------------------------------------
@@ -7,44 +7,28 @@
 // This project is split across three JavaScript files:
 //
 //   sketch.js — p5.js entry point: setup(), draw(), mousePressed()
-//   game.js   — game logic: choices, scores, round tracking
-//   scenes.js — drawing helpers: blobs, buttons, screens
+//   game.js   — story state: current page
+//   scenes.js — drawing helpers: buttons and screens
 //
-// All three files are loaded in index.html in that order.
-// Variables and functions defined in one file are available
-// in all others because they share the same global scope.
+// All files are loaded in index.html in that order, so
+// shared variables are available across files.
 // ------------------------------------------------------------
-
-// ------------------------------------------------------------
-// GAME STATES
-// The game moves through these states in order.
-// Storing states as constants prevents typos — if you mistype
-// STATE_PLAY, JavaScript will throw an error instead of
-// silently using the wrong string.
-// ------------------------------------------------------------
-const STATE_START = "start";
-const STATE_PLAY  = "play";
-const STATE_OVER  = "over";
-
-let gameState = STATE_START;
-
-// ------------------------------------------------------------
-// BLOB ANIMATION TIMERS
-// Increase each frame to drive the blob wobble animation.
-// npcBlobT starts at 50 so the blobs wobble differently.
-// ------------------------------------------------------------
-let playerBlobT = 0;
-let npcBlobT = 50;
 
 // ------------------------------------------------------------
 // BUTTON LAYOUT
 // Shared constants for button positions and size.
-// Defined once here so sketch.js and scenes.js stay in sync.
+// Button positions are calculated dynamically in setup().
 // ------------------------------------------------------------
-const BTN_POSITIONS = [200, 400, 600];
-const BTN_W = 150;
-const BTN_H = 52;
-const BTN_Y = 360;
+let BTN_POSITIONS = [0, 0];
+const BTN_W = 220;
+const BTN_H = 60;
+let BTN_Y = 0;
+
+let bgImage = null;
+
+function preload() {
+  bgImage = loadImage("assets/images/background.jpg");
+}
 
 // ============================================================
 // setup()
@@ -52,80 +36,147 @@ const BTN_Y = 360;
 // Sets up the canvas and font.
 // ============================================================
 function setup() {
-  createCanvas(800, 450);
+  createCanvas(windowWidth, windowHeight);
   textFont("monospace");
+  
+  // Calculate button positions to center them
+  BTN_POSITIONS[0] = windowWidth / 4;
+  BTN_POSITIONS[1] = (windowWidth * 3) / 4;
+  BTN_Y = windowHeight / 2;
+}
+
+
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
+  
+  // Recalculate button positions on resize
+  BTN_POSITIONS[0] = windowWidth / 4;
+  BTN_POSITIONS[1] = (windowWidth * 3) / 4;
+  BTN_Y = windowHeight / 2;
 }
 
 // ============================================================
 // draw()
 // Runs repeatedly in a loop after setup() finishes.
-// Calls drawing functions from scenes.js and reads game
-// state variables from game.js to decide what to show.
+// Decides which screen to draw based on the current state.
 // ============================================================
 function draw() {
-  // drawBackground() is defined in scenes.js
   drawBackground();
 
-  // Switch between screens based on the current game state
   if (gameState === STATE_START) {
     drawStartScreen();
-  } else if (gameState === STATE_PLAY) {
-    drawGameScreen(playerBlobT, npcBlobT);
-  } else if (gameState === STATE_OVER) {
-    drawGameOverScreen();
+  } else if (gameState === STATE_PAGE_ONE) {
+    drawPageOne();
+  } else if (gameState === STATE_PAGE_ONE_OPTION_ONE) {
+    drawPageOneOptionOne();
+  } else if (gameState === STATE_PAGE_ONE_OPTION_TWO) {
+    drawPageOneOptionTwo();
+  } else if (gameState === STATE_PAGE_ONE_OPTION_ONE_OPTION_ONE) {
+    drawPageOneOptionOneOptionOne();
+  } else if (gameState === STATE_PAGE_ONE_OPTION_ONE_OPTION_TWO) {
+    drawPageOneOptionOneOptionTwo();
+  } else if (gameState === STATE_PAGE_ONE_OPTION_TWO_OPTION_ONE) {
+    drawPageOneOptionTwoOptionOne();
+  } else if (gameState === STATE_PAGE_ONE_OPTION_TWO_OPTION_TWO) {
+    drawPageOneOptionTwoOptionTwo();
+  } else if (gameState === STATE_PAGE_TWO) {
+    drawPageTwo();
+  } else if (gameState === STATE_PAGE_TWO_OPTION_ONE) {
+    drawPageTwoOptionOne();
+  } else if (gameState === STATE_PAGE_TWO_OPTION_TWO) {
+    drawPageTwoOptionTwo();
+  } else if (gameState === STATE_PAGE_TWO_OPTION_ONE_OPTION_ONE) {
+    drawPageTwoOptionOneOptionOne();
+  } else if (gameState === STATE_PAGE_TWO_OPTION_ONE_OPTION_TWO) {
+    drawPageTwoOptionOneOptionTwo();
+  } else if (gameState === STATE_PAGE_TWO_OPTION_TWO_OPTION_ONE) {
+    drawPageTwoOptionTwoOptionOne();
+  } else if (gameState === STATE_PAGE_TWO_OPTION_TWO_OPTION_TWO) {
+    drawPageTwoOptionTwoOptionTwo();
   }
-
-  // Advance blob animations every frame regardless of state
-  playerBlobT += 0.015;
-  npcBlobT += 0.015;
 }
 
 // ============================================================
 // mousePressed()
-// A built-in p5.js event function.
-// Automatically called once every time the mouse is clicked.
-// Handles button clicks across all game states.
+// Handles button clicks for the title screen and story pages.
 // ============================================================
 function mousePressed() {
-  // --- Start screen ---
   if (gameState === STATE_START) {
-    if (isMouseOver(width / 2, 390, 200, 52)) {
-      gameState = STATE_PLAY;
+    if (isMouseOver(BTN_POSITIONS[0], BTN_Y, BTN_W, BTN_H)) {
+      gameState = STATE_PAGE_ONE;
     }
-  }
-
-  // --- Play screen ---
-  else if (gameState === STATE_PLAY) {
-    if (playerChoice === null) {
-      // Choice buttons — ROCK, PAPER, SCISSORS defined in game.js
-      let choices = [ROCK, PAPER, SCISSORS];
-      for (let i = 0; i < 3; i++) {
-        if (isMouseOver(BTN_POSITIONS[i], BTN_Y, BTN_W, BTN_H)) {
-          // playerChoose() is defined in game.js
-          // It sets playerChoice, npcChoice, roundResult, and updates scores
-          playerChoose(choices[i]);
-        }
-      }
-    } else {
-      // Next Round or See Result button
-      if (isMouseOver(width / 2, 390, 200, 52)) {
-        if (gameOver) {
-          // gameOver is set in game.js when someone reaches 2 wins
-          gameState = STATE_OVER;
-        } else {
-          // nextRound() advances the round counter and clears choices
-          nextRound();
-        }
-      }
+    if (isMouseOver(BTN_POSITIONS[1], BTN_Y, BTN_W, BTN_H)) {
+      gameState = STATE_PAGE_TWO;
     }
-  }
-
-  // --- Game over screen ---
-  else if (gameState === STATE_OVER) {
-    if (isMouseOver(width / 2, 390, 220, 52)) {
-      // resetGame() resets all scores and choices for a new game
-      resetGame();
-      gameState = STATE_PLAY;
+  } else if (gameState === STATE_PAGE_ONE) {
+    if (isMouseOver(BTN_POSITIONS[0], BTN_Y, BTN_W, BTN_H)) {
+      gameState = STATE_PAGE_ONE_OPTION_ONE;
+    }
+    if (isMouseOver(BTN_POSITIONS[1], BTN_Y, BTN_W, BTN_H)) {
+      gameState = STATE_PAGE_ONE_OPTION_TWO;
+    }
+  } else if (gameState === STATE_PAGE_ONE_OPTION_ONE) {
+    if (isMouseOver(BTN_POSITIONS[0], BTN_Y, BTN_W, BTN_H)) {
+      gameState = STATE_PAGE_ONE_OPTION_ONE_OPTION_ONE;
+    }
+    if (isMouseOver(BTN_POSITIONS[1], BTN_Y, BTN_W, BTN_H)) {
+      gameState = STATE_PAGE_ONE_OPTION_ONE_OPTION_TWO;
+    }
+  } else if (gameState === STATE_PAGE_ONE_OPTION_TWO) {
+    if (isMouseOver(BTN_POSITIONS[0], BTN_Y, BTN_W, BTN_H)) {
+      gameState = STATE_PAGE_ONE_OPTION_TWO_OPTION_ONE;
+    }
+    if (isMouseOver(BTN_POSITIONS[1], BTN_Y, BTN_W, BTN_H)) {
+      gameState = STATE_PAGE_ONE_OPTION_TWO_OPTION_TWO;
+    }
+  } else if (gameState === STATE_PAGE_TWO) {
+    if (isMouseOver(BTN_POSITIONS[0], BTN_Y, BTN_W, BTN_H)) {
+      gameState = STATE_PAGE_TWO_OPTION_ONE;
+    }
+    if (isMouseOver(BTN_POSITIONS[1], BTN_Y, BTN_W, BTN_H)) {
+      gameState = STATE_PAGE_TWO_OPTION_TWO;
+    }
+  } else if (gameState === STATE_PAGE_TWO_OPTION_ONE) {
+    if (isMouseOver(BTN_POSITIONS[0], BTN_Y, BTN_W, BTN_H)) {
+      gameState = STATE_PAGE_TWO_OPTION_ONE_OPTION_ONE;
+    }
+    if (isMouseOver(BTN_POSITIONS[1], BTN_Y, BTN_W, BTN_H)) {
+      gameState = STATE_PAGE_TWO_OPTION_ONE_OPTION_TWO;
+    }
+  } else if (gameState === STATE_PAGE_TWO_OPTION_TWO) {
+    if (isMouseOver(BTN_POSITIONS[0], BTN_Y, BTN_W, BTN_H)) {
+      gameState = STATE_PAGE_TWO_OPTION_TWO_OPTION_ONE;
+    }
+    if (isMouseOver(BTN_POSITIONS[1], BTN_Y, BTN_W, BTN_H)) {
+      gameState = STATE_PAGE_TWO_OPTION_TWO_OPTION_TWO;
+    }
+  } else if (
+    gameState === STATE_PAGE_ONE_OPTION_ONE_OPTION_ONE ||
+    gameState === STATE_PAGE_ONE_OPTION_ONE_OPTION_TWO
+  ) {
+    if (isMouseOver(width / 2, 380, 240, 56)) {
+      gameState = STATE_START;
+    }
+  } else if (
+    gameState === STATE_PAGE_ONE_OPTION_TWO_OPTION_ONE ||
+    gameState === STATE_PAGE_ONE_OPTION_TWO_OPTION_TWO
+  ) {
+    if (isMouseOver(width / 2, 380, 240, 56)) {
+      gameState = STATE_START;
+    }
+  } else if (
+    gameState === STATE_PAGE_TWO_OPTION_ONE_OPTION_ONE ||
+    gameState === STATE_PAGE_TWO_OPTION_ONE_OPTION_TWO
+  ) {
+    if (isMouseOver(width / 2, 380, 240, 56)) {
+      gameState = STATE_START;
+    }
+  } else if (
+    gameState === STATE_PAGE_TWO_OPTION_TWO_OPTION_ONE ||
+    gameState === STATE_PAGE_TWO_OPTION_TWO_OPTION_TWO
+  ) {
+    if (isMouseOver(width / 2, 380, 240, 56)) {
+      gameState = STATE_START;
     }
   }
 }
